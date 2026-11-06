@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} · Game Agentic Session Learn{% endblock %}
+{% block content %}
+<a class="small text-decoration-none" href="{{ url_for('main.index') }}">← All projects</a>
+<h1 class="mt-2">{{ project.name }}</h1>
+{% if not project.is_archive %}
+<p class="text-secondary text-break mb-1">Unity project: {{ project.path }}</p>
+{% if git_root %}<p class="small text-secondary text-break">Git repository: {{ git_root }}</p>{% endif %}
+<div class="row g-3 my-2">
+  <div class="col-md-4"><div class="status-card"><span>Unity project structure</span><strong class="text-{{ 'success' if unity_detected else 'danger' }}">{{ 'Detected' if unity_detected else 'Not detected' }}</strong></div></div>
+  <div class="col-md-4"><div class="status-card"><span>Git repository</span><strong class="text-{{ 'success' if git_detected else 'danger' }}">{{ 'Detected' if git_detected else 'Not detected' }}</strong></div></div>
+  <div class="col-md-4"><div class="status-card"><span>Monitoring mode</span><strong>Git evidence only</strong><small>Unity and coding tools run outside GameLearn</small></div></div>
+</div>
+{% if git_changes %}
+<div class="alert alert-warning mt-4">
+  <h2 class="h5">Clean baseline required</h2>
+  <p>Forgot to start? Recover a session below to import this work. Live monitoring still requires a clean Git baseline.</p>
+  <ul class="mb-0">{% for change in git_changes %}<li><code>{{ change.path }}</code> — {{ change.change_type|lower }}</li>{% endfor %}</ul>
+</div>
+{% elif git_error %}
+<div class="alert alert-danger mt-4">{{ git_error }}</div>
+{% endif %}
+<form class="mt-4" method="post" action="{{ url_for('main.begin_session', project_id=project.id) }}">
+  <button class="btn btn-primary btn-lg" {% if not unity_detected or not git_detected %}disabled{% endif %}>Start GameLearn session</button>
+</form>
+{% if unity_detected and git_detected %}<a class="btn btn-outline-primary mt-3" href="{{ url_for('main.recover_project_session', project_id=project.id) }}">Forgot to start? Recover a session</a>{% endif %}
+{% else %}
+<p class="text-secondary">Imported project history. All sessions, evidence, and saved learning activities are available here. Unity project files are not included in this backup.</p>
+{% endif %}
+<div class="d-flex gap-2 mt-4">
+  <a class="btn btn-outline-primary" href="{{ url_for('main.download_project_backup', project_id=project.id) }}">Export project backup</a>
+  <a class="btn btn-outline-danger" href="{{ url_for('main.remove_project', project_id=project.id) }}">Remove project</a>
+</div>
+<p class="small text-secondary mt-2">Export includes every session with its evidence, chats, and learning page. End active sessions and finish learning requests first.</p>
+{% if project.sessions %}
+<h2 class="h4 mt-5">Sessions</h2>
+<div class="list-group shadow-sm">{% for item in project.sessions|sort(attribute='id', reverse=true) %}<a class="list-group-item list-group-item-action d-flex justify-content-between" href="{{ url_for('main.session_detail', session_id=item.id) if item.status == 'ACTIVE' else url_for('main.session_summary', session_id=item.id) }}"><span><strong>{{ item.display_name }}</strong><br><small>{% if item.recovery is not none %}Imported {% endif %}{{ item.started_at.strftime('%Y-%m-%d %H:%M') }}</small></span><span class="badge text-bg-{{ 'primary' if item.status == 'ACTIVE' else 'success' }}">{{ 'RECOVERED' if item.recovery is not none else item.status }}</span></a>{% endfor %}</div>
+{% endif %}
+{% endblock %}

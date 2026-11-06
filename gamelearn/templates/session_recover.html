@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Recover a session · Game Agentic Session Learn{% endblock %}
+{% block content %}
+<a href="{{ url_for('main.project_detail', project_id=project.id) }}">← {{ project.name }}</a>
+<h1 class="mt-3">Recover a forgotten session</h1>
+<p>Import the changes between a starting commit and your current files, including uncommitted and new files. Your Git repository will not be changed.</p>
+<div class="alert alert-info">This captures the resulting changes, not the missed timeline. Git cannot reconstruct when uncommitted edits happened or their intermediate steps. Changes may overlap earlier sessions; check the preview before importing.</div>
+<form method="get" class="my-4">
+  <label for="baseline" class="form-label">Starting commit (up to 100 recent commits)</label>
+  <select id="baseline" name="baseline" class="form-select mb-2">
+    {% for commit in commits %}<option value="{{ commit.hash }}" {% if commit.hash == baseline %}selected{% endif %}>{{ commit.hash[:8] }} · {{ commit.date }} · {{ commit.subject }}</option>{% endfor %}
+  </select>
+  <p class="small text-secondary">Choose the commit immediately before the work you want to recover. The latest commit captures only changes made since that commit.</p>
+  <button class="btn btn-outline-primary">Preview changes</button>
+</form>
+<h2 class="h4">Changes to import ({{ records|length }})</h2>
+{% for record in records %}
+<details class="border rounded p-3 mb-2">
+  <summary><code>{{ record.path }}</code> — {{ record.change_type|lower }}{% if record.additions is not none %} (+{{ record.additions }} / −{{ record.deletions }}){% endif %}</summary>
+  {% if record.diff_text %}<pre class="mt-3 text-break"><code>{{ record.diff_text }}</code></pre>{% else %}<p class="mt-2">No text preview available.</p>{% endif %}
+</details>
+{% else %}<p>No changes found. Choose an earlier commit if the work was already committed.</p>{% endfor %}
+{% if records %}
+<form method="post" class="my-4">
+  <input type="hidden" name="csrf_token" value="{{ config.CODEX_BRIDGE_CSRF_TOKEN }}">
+  <input type="hidden" name="preview_token" value="{{ preview_token }}">
+  <label for="estimated-date" class="form-label">Estimated work date (optional)</label>
+  <input id="estimated-date" type="date" name="estimated_date" class="form-control mb-2">
+  <p class="small text-secondary">This is your estimate, not a verified Git edit time. The actual import time is saved separately.</p>
+  <button class="btn btn-primary">Import as recovered session</button>
+</form>
+{% endif %}
+{% endblock %}

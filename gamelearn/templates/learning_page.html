@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Learning page · {{ session.project.name }} · Game Agentic Session Learn{% endblock %}
+{% block content %}
+<div class="learning-page-header">
+  <div>
+    <p class="eyebrow mb-2">{{ session.display_name }} · LEARNING PAGE</p>
+    <h1 class="h3 mb-1">{{ session.project.name }}</h1>
+    <p class="text-secondary mb-0">An interactive explanation generated from this session's preserved evidence.</p>
+  </div>
+  <a class="btn btn-outline-primary" href="{{ url_for('main.session_summary', session_id=session.id) }}">Back to session summary</a>
+</div>
+<div class="learning-file-toast" id="learning-file-toast" role="status" aria-live="polite" hidden></div>
+<div class="learning-page-layout">
+  <iframe id="learning-page-frame"
+    class="learning-page-frame"
+    srcdoc="{{ learning_page_document }}"
+    title="Interactive learning page for {{ session.project.name }} session {{ session.number }}"
+    sandbox="allow-scripts"
+  ></iframe>
+  <aside class="learning-chat card shadow-sm" id="learning-chat" aria-labelledby="learning-chat-heading"
+    data-chats-url="{{ url_for('main.session_chats', session_id=session.id) }}"
+    data-ask-url="{{ url_for('main.ask_session_question', session_id=session.id) }}"
+    data-status-url-template="{{ url_for('main.chat_message_status', session_id=session.id, message_id=0) }}"
+    data-open-file-url="{{ url_for('main.open_session_code_file', session_id=session.id) }}"
+    data-csrf-token="{{ codex_csrf_token }}">
+    <div class="learning-chat-header">
+      <div><p class="eyebrow mb-1">CODEX TUTOR</p><h2 class="h5 mb-0" id="learning-chat-heading">Ask about this session</h2></div>
+      <button class="btn btn-sm btn-outline-primary" id="new-learning-chat" type="button">New chat</button>
+    </div>
+    <label class="form-label small" for="learning-chat-picker">Saved chats</label>
+    <select class="form-select form-select-sm" id="learning-chat-picker" aria-label="Saved chats for this session"><option value="">New chat</option></select>
+    <div class="learning-chat-messages" id="learning-chat-messages" role="log" aria-live="polite">
+      <p class="text-secondary small mb-0">Ask a question about the changes, code, or ideas in this learning session.</p>
+    </div>
+    <form id="learning-chat-form">
+      <label class="form-label visually-hidden" for="learning-chat-question">Question</label>
+      <textarea class="form-control" id="learning-chat-question" rows="3" maxlength="4000" placeholder="What would you like explained?" required></textarea>
+      <div class="d-flex align-items-center justify-content-between gap-2 mt-2">
+        <span class="small text-secondary" id="learning-chat-status" role="status"></span>
+        <button class="btn btn-primary" id="learning-chat-send" type="submit">Ask Codex</button>
+      </div>
+    </form>
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/learning-chat.js') }}"></script>{% endblock %}

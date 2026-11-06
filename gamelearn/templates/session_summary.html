@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Session summary · Game Agentic Session Learn{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/quill-2.0.3.snow.css') }}">
+{% endblock %}
+{% block content %}
+<p class="eyebrow">SESSION COMPLETE</p>
+<h1>{{ session.display_name }}</h1>
+{% if session.recovery is not none %}
+<div class="alert alert-info"><strong>Recovered session</strong> · Imported {{ session.started_at.strftime('%Y-%m-%d %H:%M') }} UTC.
+{% if session.recovery.estimated_date %}Estimated work date (student supplied): {{ session.recovery.estimated_date }}.{% endif %}
+The changes were imported after the work. Edit times and intermediate steps were not observed.</div>
+{% endif %}
+<p class="text-secondary">{{ session.project.name }}</p>
+<p class="lead text-secondary">A local, evidence-based history of this development session.</p>
+{% include "session_prompt.html" %}
+<div class="session-actions d-flex flex-wrap gap-2 align-items-center my-4">
+  <a class="btn btn-primary" href="{{ url_for('main.session_diff', session_id=session.id) }}">View Git diff</a>
+  <div class="dropdown">
+    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Session tools</button>
+    <ul class="dropdown-menu shadow-sm">
+      <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#notes-modal">My notes</button></li>
+      <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#learning-page-modal">Learning page</button></li>
+      {% if learning_page_available %}<li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="{{ url_for('main.learning_page', session_id=session.id) }}">View learning page</a></li>{% endif %}
+    </ul>
+  </div>
+</div>
+
+<div class="modal fade" id="notes-modal" tabindex="-1" aria-labelledby="my-notes-heading" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="my-notes-heading">My notes</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">{% include "session_notes.html" %}</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="learning-page-modal" tabindex="-1" aria-labelledby="explain-heading" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5">Learning page</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0">
+<section class="explain-card explain-card-modal" aria-labelledby="explain-heading">
+  <div>
+    <p class="eyebrow mb-2">LEARN FROM THIS SESSION</p>
+    <h2 class="h4" id="explain-heading">Turn the evidence into a guided explanation</h2>
+    <div class="row g-2 mb-3 align-items-end">
+      <div class="col-lg-5">
+        <label for="learning-model" class="form-label">Learning-page model</label>
+        <select id="learning-model" class="form-select">
+          {% for option in codex_connection.models or [] %}
+          <option value="{{ option.model }}" data-efforts='{{ option.efforts | tojson }}' {% if option.model == codex_connection.generation_model %}selected{% endif %}>{{ option.model }}</option>
+          {% else %}
+          <option value="{{ codex_connection.generation_model or 'gpt-6-astra' }}" data-efforts='["low"]'>{{ codex_connection.generation_model or 'gpt-6-astra' }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-lg-4">
+        <label for="learning-reasoning" class="form-label">Reasoning level</label>
+        <select id="learning-reasoning" class="form-select"><option value="low">Low</option></select>
+      </div>
+      <div class="col-lg-3 d-grid gap-2">
+        <button
+          class="btn btn-light fw-semibold"
+          id="explain-session-button"
+          type="button"
+          data-explain-url="{{ url_for('main.explain_session', session_id=session.id) }}"
+          data-status-url="{{ url_for('main.explanation_status', session_id=session.id) }}"
+          data-stop-url="{{ url_for('main.stop_explanation', session_id=session.id) }}"
+          data-learning-page-url="{{ url_for('main.learning_page', session_id=session.id) }}"
+          data-csrf-token="{{ codex_csrf_token }}"
+          {% if not codex_connection.connected %}disabled{% endif %}
+        >{{ "Recreate learning page" if learning_page_available else "Create learning page" }}</button>
+        <button class="btn btn-outline-light d-none" id="stop-explanation-button" type="button">Stop</button>
+      </div>
+    </div>
+    <p class="small mb-2">Choose settings before creating or recreating the page. Tutor chat and worksheet feedback always use Low reasoning.</p>
+    {% if not codex_connection.models %}<p class="small mb-2">Model choices could not be loaded. The latest model will be requested with Low reasoning; refresh to retry loading choices.</p>{% endif %}
+    <p class="small mb-2">Codex model: <strong id="explain-model">{{ codex_connection.generation_model or 'Confirmed when creation starts' }}</strong> · Reasoning: <strong id="explain-reasoning">Low</strong></p>
+    <p class="mb-2">GameLearn can compare this session with the previous completed session, explain the important code, and create an interactive learning page.</p>
+    <p class="small mb-0 opacity-75">The page is built by Codex in the background from a fixed, bounded evidence request. GameLearn does not store model credentials or accept arbitrary prompts.</p>
+  </div>
+  {% if learning_page_available %}<div class="explain-actions explain-actions-inline">
+    <a class="btn btn-outline-light" href="{{ url_for('main.learning_page', session_id=session.id) }}">View learning page</a>
+  </div>{% endif %}
+  <div class="explain-status" id="explain-session-status" role="status" aria-live="polite">
+    <div class="explain-progress d-none" id="explain-progress" aria-hidden="true">
+      <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+      <div class="flex-grow-1">
+        <div class="progress" aria-label="Learning page progress">
+          <div class="progress-bar progress-bar-striped progress-bar-animated" id="explain-progress-bar" role="progressbar" style="width: 8%" aria-valuemin="0" aria-valuemax="100" aria-valuenow="8"></div>
+        </div>
+      </div>
+      <span class="explain-elapsed" id="explain-elapsed">0s</span>
+    </div>
+    <p class="explain-feedback mb-0" id="explain-session-feedback">{{ codex_connection.message }}</p>
+    <div class="explain-telemetry d-none" id="explain-telemetry">
+      <div class="explain-telemetry-summary">
+        <span id="explain-activity-count">Waiting for CLI activity</span>
+        <span id="explain-last-activity"></span>
+        <span id="explain-token-usage"></span>
+      </div>
+      <ol class="explain-activity-log mb-0" id="explain-activity-log" aria-label="Recent safe Codex CLI activity"></ol>
+    </div>
+  </div>
+</section>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row g-3 my-4">
+  <div class="col-6 col-lg-4"><div class="metric"><strong>{{ metrics.files_changed }}</strong><span>Files changed</span></div></div>
+  <div class="col-6 col-lg-4"><div class="metric"><strong>{{ metrics.files_created }}</strong><span>Files created</span></div></div>
+  <div class="col-6 col-lg-4"><div class="metric"><strong>{{ metrics.files_deleted }}</strong><span>Files deleted</span></div></div>
+</div>
+<div class="row g-4">
+  <section class="col-12">
+    <div class="card border-0 shadow-sm"><div class="card-body p-4">
+      <h2 class="h4">Files changed</h2>
+      {% if session.file_changes %}<div class="table-responsive"><table class="table align-middle"><thead><tr><th>File</th><th>Change</th><th class="text-end">Lines</th></tr></thead><tbody>
+      {% for change in session.file_changes %}<tr><td class="text-break"><code>{{ change.path }}</code>{% if change.is_binary %} <span class="badge text-bg-secondary">binary</span>{% endif %}</td><td>{{ change.change_type|title }}</td><td class="text-end"><span class="text-success">+{{ change.additions if change.additions is not none else '—' }}</span> <span class="text-danger">−{{ change.deletions if change.deletions is not none else '—' }}</span></td></tr>{% endfor %}
+      </tbody></table></div>{% else %}<p class="text-secondary">No file differences from the starting commit.</p>{% endif %}
+    </div></div>
+  </section>
+</div>
+<h2 class="h4 mt-5">Session timeline</h2>
+<div class="timeline">{% for event in session.events|sort(attribute='id') %}<article class="timeline-event event-{{ event.source|lower }} status-{{ event.status|lower }}"><time>{{ event.timestamp.strftime('%H:%M:%S') }}</time><div><span class="badge source-badge">{{ event.source }}</span> <strong>{{ event.title }}</strong>{% if event.description %}<p>{{ event.description }}</p>{% endif %}{% if event.changed_files %}<ul class="timeline-files">{% for file in event.changed_files %}<li><span>{{ file.change_type }}</span> <code>{% if file.old_path %}{{ file.old_path }} → {% endif %}{{ file.path }}</code></li>{% endfor %}</ul>{% endif %}</div></article>{% endfor %}</div>
+<p class="small text-secondary mt-4">Evidence note: This session records Git and filesystem changes within the repository. Git does not identify which coding agent made the changes.</p>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/quill-2.0.3.js') }}"></script>
+<script src="{{ url_for('static', filename='js/session-notes.js') }}"></script>
+<script src="{{ url_for('static', filename='js/explain-session.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,103 @@
+<section id="gamelearn-fixed-lesson" data-gamelearn-stepper aria-labelledby="gamelearn-lesson-title">
+  <header class="gl-lesson-header">
+    <p class="text-muted">Five-step guided learning activity</p>
+    <h1 id="gamelearn-lesson-title">{{ lesson.title }}</h1>
+    {% for paragraph in lesson.introduction %}<p>{{ paragraph }}</p>{% endfor %}
+  </header>
+
+  <div class="gl-wizard-panel">
+    <nav class="gl-step-navigation" aria-label="Learning steps">
+      <p class="gl-step-navigation-title">Learning steps</p>
+      <ol data-gamelearn-step-list>
+        {% for step in lesson.steps %}
+        <li{% if loop.first %} aria-current="step"{% endif %}>
+          <button type="button" data-gamelearn-step-jump="{{ loop.index0 }}" aria-controls="gamelearn-step-{{ loop.index0 }}">
+            <span class="gl-step-number" aria-hidden="true">{{ loop.index }}</span>
+            <span>{{ step.title }}</span>
+          </button>
+        </li>
+        {% endfor %}
+        <li>
+          <button type="button" data-gamelearn-step-jump="4" aria-controls="gamelearn-step-4">
+            <span class="gl-step-number" aria-hidden="true">5</span>
+            <span>Learning worksheet</span>
+          </button>
+        </li>
+      </ol>
+    </nav>
+
+    <div class="gl-wizard-main">
+      <div class="gl-step-stage" aria-live="polite">
+    {% for step in lesson.steps %}
+    <article class="gl-step" id="gamelearn-step-{{ loop.index0 }}" data-gamelearn-step="{{ loop.index0 }}"{% if not loop.first %} hidden{% endif %}>
+      <div>
+        <p class="text-muted">Step {{ loop.index }} of 5</p>
+        <h2>{{ step.title }}</h2>
+      </div>
+      {% if step.file_paths %}
+      <div class="gl-file-paths" aria-label="Code files in this step">
+        {% for path in step.file_paths %}<p data-gamelearn-file-row><a href="#" data-gamelearn-open-file="{{ path }}">{{ path }}</a></p>{% endfor %}
+      </div>
+      {% endif %}
+      <section>
+        <h3>What Git shows</h3>
+        {% for paragraph in step.what_git_shows %}<p>{{ paragraph }}</p>{% endfor %}
+      </section>
+      {% for snippet in step.snippets %}
+      <div class="gl-code-example">
+        <p data-gamelearn-file-row><a href="#" data-gamelearn-open-file="{{ snippet.path }}">{{ snippet.path }}</a></p>
+        <p class="gl-code-note">Highlighted lines match this step's explanation.</p>
+        <pre><code class="language-{{ snippet.language }}" data-gamelearn-highlight-lines="{{ snippet.highlight_lines|join(',') }}">{{ snippet.code }}</code></pre>
+      </div>
+      {% endfor %}
+      <section>
+        <h3>How it works</h3>
+        {% for paragraph in step.how_it_works %}<p>{{ paragraph }}</p>{% endfor %}
+      </section>
+      <section>
+        <h3>Why the agent probably did this</h3>
+        {% for paragraph in step.why_agent_probably_did_this %}<p>{{ paragraph }}</p>{% endfor %}
+      </section>
+      {% if step.diagram %}<div class="mermaid">{{ step.diagram.definition }}</div>{% endif %}
+      {% for topic in step.research %}<aside data-gamelearn-research><strong>Research this</strong>{{ topic }}</aside>{% endfor %}
+      {% if step.follow_ups %}
+      <div class="viz-row">
+        {% for action in step.follow_ups %}<button type="button" class="btn btn-primary" data-gamelearn-tutor-question="{{ action.question }}">{{ action.label }}</button>{% endfor %}
+      </div>
+      {% endif %}
+    </article>
+    {% endfor %}
+
+    <article class="gl-step" id="gamelearn-step-4" data-gamelearn-step="4" hidden>
+      <div>
+        <p class="text-muted">Step 5 of 5</p>
+        <h2>Learning worksheet</h2>
+        <p>{{ lesson.worksheet.introduction }}</p>
+      </div>
+      {% for item in lesson.worksheet["items"] %}
+      <form data-gamelearn-worksheet data-gamelearn-question="{{ item.question }}{% if item.type == 'open' %} Use {{ item.path }} to inspect the relevant code before answering.{% elif item.path %} Inspect {{ item.path }} before choosing.{% endif %}">
+        {% if item.type == "open" %}
+        <label for="gamelearn-open-{{ loop.index }}">{{ item.question }} Use <a href="#" data-gamelearn-open-file="{{ item.path }}">{{ item.path }}</a> to inspect the relevant code before answering.</label>
+        <textarea id="gamelearn-open-{{ loop.index }}" name="answer" aria-label="Your answer"></textarea>
+        <button type="button" class="btn" data-gamelearn-hint-toggle aria-expanded="false">Show hint</button>
+        <p data-gamelearn-hint hidden>{{ item.hint }}</p>
+        {% else %}
+        <fieldset>
+          <legend>{{ item.question }}{% if item.path %} Inspect <a href="#" data-gamelearn-open-file="{{ item.path }}">{{ item.path }}</a> before choosing.{% endif %}</legend>
+          {% for option in item.options %}<label><input type="radio" name="answer" value="{{ option }}"> {{ option }}</label>{% endfor %}
+        </fieldset>
+        {% endif %}
+        <button type="submit" class="btn btn-primary">Check my answer</button>
+      </form>
+      {% endfor %}
+    </article>
+      </div>
+
+      <div class="viz-row gl-step-controls" aria-label="Step controls">
+        <button type="button" class="btn" data-gamelearn-previous disabled>Previous</button>
+        <span class="text-muted" data-gamelearn-position>Step 1 of 5</span>
+        <button type="button" class="btn btn-primary" data-gamelearn-next>Next</button>
+      </div>
+    </div>
+  </div>
+</section>

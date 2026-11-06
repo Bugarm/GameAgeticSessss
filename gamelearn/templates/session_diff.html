@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Session diff · Game Agentic Session Learn{% endblock %}
+{% block content %}
+<a class="small text-decoration-none" href="{{ url_for('main.session_summary', session_id=session.id) }}">← Session summary</a>
+<p class="eyebrow mt-3">INDEPENDENT GIT EVIDENCE</p>
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2"><h1>Session diff</h1><a class="btn btn-outline-primary" href="{{ url_for('main.export_session_diff', session_id=session.id) }}">Export diff for AI</a></div>
+<p class="text-secondary">Green + lines were added. Red − lines were removed. Unmarked lines provide context.</p>
+<p class="text-secondary">Changes relative to starting commit <code>{{ session.start_commit_hash[:10] }}</code>, preserved when the session ended.</p>
+{% if session.file_changes %}
+  {% for change in session.file_changes %}
+    <section class="diff-card"><header><strong>{{ change.path }}</strong><span>{{ change.change_type|title }} · +{{ change.additions if change.additions is not none else '—' }} −{{ change.deletions if change.deletions is not none else '—' }}</span></header>{% if change.is_binary %}<div class="binary-note">Binary file changed. GameLearn preserved the filename and status without displaying binary content.</div>{% elif change.diff_text %}<pre><code>{% for line in change.diff_text.splitlines() %}<span class="diff-line {% if line.startswith(('+++', '---', 'diff ', 'index ')) %}diff-meta{% elif line.startswith('+') %}diff-added{% elif line.startswith('-') %}diff-removed{% elif line.startswith('@@') %}diff-hunk{% endif %}">{{ line }}</span>{% endfor %}</code></pre>{% else %}<div class="binary-note">No textual diff was available.</div>{% endif %}</section>
+  {% endfor %}
+{% else %}<div class="empty-state">No differences from the starting commit.</div>{% endif %}
+{% endblock %}

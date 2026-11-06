@@ -1,0 +1,12 @@
+<section class="card my-4" aria-labelledby="session-prompt-heading">
+  <div class="card-body">
+    <h2 class="h4" id="session-prompt-heading">Session prompt <span class="text-secondary fs-6">(optional)</span></h2>
+    <form method="post" action="{{ url_for('main.save_session_prompt', session_id=session.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ config.CODEX_BRIDGE_CSRF_TOKEN }}">
+      <label class="form-label" for="session-prompt">Prompt given to the coding agent</label>
+      <textarea class="form-control" id="session-prompt" name="prompt" rows="5" maxlength="20000" aria-describedby="session-prompt-help">{{ session.prompt or '' }}</textarea>
+      <p class="form-text" id="session-prompt-help">Save the prompt for your records. You can edit it after the session ends, or clear the field and save to remove it. Up to 20,000 characters. This note is not sent to Codex.</p>
+      <button class="btn btn-primary" type="submit">Save prompt</button>
+    </form>
+  </div>
+</section>

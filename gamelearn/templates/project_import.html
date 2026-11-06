@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Import project · Game Agentic Session Learn{% endblock %}
+{% block content %}
+<a href="{{ url_for('main.index') }}">← All projects</a>
+<h1 class="mt-3">Import project backup</h1>
+<p>Restore a project and all its sessions as a separate saved project. You can rename the project and individual sessions before importing.</p>
+<p class="text-secondary">Includes recorded evidence, tutor chats, and saved learning pages. The Unity folder and Git repository are not included. Existing projects remain unchanged.</p>
+{% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+<form method="post" enctype="multipart/form-data" id="project-import-form">
+  <input type="hidden" name="csrf_token" value="{{ config.CODEX_BRIDGE_CSRF_TOKEN }}">
+  <label class="form-label" for="project-backup">Project backup file (maximum 20 MB)</label>
+  <input class="form-control" id="project-backup" type="file" name="backup" accept=".json,application/json" required>
+  <p id="import-feedback" class="mt-2" role="status" aria-live="polite"></p>
+  <div id="import-preview" hidden>
+    <label class="form-label" for="import-project-name">Project name</label>
+    <input class="form-control mb-3" id="import-project-name" name="project_name" maxlength="200" disabled>
+    <h2 class="h5">Session names</h2>
+    <p class="text-secondary small">Edit any name below, or leave it blank to use the session's default name.</p>
+    <div id="import-session-names"></div>
+  </div>
+  <button class="btn btn-primary mt-3" id="import-project-button">Import project</button>
+  <noscript><p>Enable JavaScript to preview and rename sessions. Without it, the original names are preserved.</p></noscript>
+</form>
+<script src="{{ url_for('static', filename='js/project-import.js') }}" defer></script>
+{% endblock %}

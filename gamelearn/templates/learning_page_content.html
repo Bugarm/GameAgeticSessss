@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+  <title>Game Agentic Session Learn session learning page</title>
+  <style>
+    :root {
+      --background: #f7f8fc;
+      --foreground: #172033;
+      --card: #ffffff;
+      --card-foreground: #172033;
+      --muted: #eef1f7;
+      --muted-foreground: #5f6b7b;
+      --border: #d9dfeb;
+      --primary: #3157d5;
+      --primary-foreground: #ffffff;
+      --green: #147a4b;
+      --viz-series-1: #3157d5;
+      --viz-series-2: #7a4cc2;
+      --viz-series-3: #dc8b18;
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { background: var(--background); color: var(--foreground); margin: 0; overflow-x: hidden; padding: clamp(1rem, 3vw, 2rem); }
+    button, input, select, textarea { font: inherit; }
+    code, pre { font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: .75rem; box-shadow: 0 .2rem .8rem rgba(32, 45, 70, .06); }
+    .btn { background: var(--card); border: 1px solid var(--border); border-radius: .5rem; color: var(--foreground); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; min-height: 2.6rem; padding: .55rem .85rem; text-decoration: none; }
+    .btn:hover, .btn:focus-visible { border-color: var(--primary); outline: none; }
+    .btn-primary { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+    .viz-grid { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
+    .viz-stat { display: flex; flex-direction: column; gap: .3rem; padding: .85rem; }
+    .viz-stat-value { font-size: 1.4rem; font-weight: 750; }
+    .viz-badge { background: var(--muted); border-radius: 999px; display: inline-flex; padding: .35rem .65rem; }
+    .text-muted { color: var(--muted-foreground); }
+    .text-small { font-size: .85rem; }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+    .progress { background: var(--muted); border-radius: 999px; height: .55rem; overflow: hidden; }
+    .progress-bar { background: var(--primary); height: 100%; }
+    pre { background: #172033; border: 1px solid #2d3a52; border-radius: .75rem; color: #e7edf8; margin: 1rem 0; max-height: 32rem; max-width: 100%; overflow: auto; padding: 1rem; scrollbar-gutter: stable; width: 100%; }
+    pre code { background: transparent; color: inherit; display: block; line-height: 1.55; min-width: max-content; white-space: pre; }
+    :not(pre) > code { background: var(--muted); border-radius: .3rem; color: #253b80; padding: .1rem .3rem; }
+    .syntax-keyword { color: #c792ea; }
+    .syntax-type { color: #82aaff; }
+    .syntax-string { color: #c3e88d; }
+    .syntax-comment { color: #8fa3bf; font-style: italic; }
+    .syntax-number { color: #f78c6c; }
+    .gl-code-line { display: inline-block; margin-inline: -.35rem; min-height: 1.55em; min-width: 100%; padding-inline: .35rem; }
+    .gl-code-line-highlight { background: rgba(255, 208, 94, .2); border-left: .2rem solid #f0ad24; padding-left: .65rem; }
+    .gl-code-note { color: var(--muted-foreground); font-size: .85rem; margin: .5rem 0 -.5rem; }
+    [data-gamelearn-open-file] { color: var(--primary); display: inline-flex; font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace; overflow-wrap: anywhere; text-decoration: underline; text-decoration-thickness: .1em; text-underline-offset: .18em; }
+    [data-gamelearn-open-file]:hover { color: #1d3ea8; }
+    [data-gamelearn-research] { background: #e8efff; border-left: .3rem solid var(--primary); border-radius: 0 .7rem .7rem 0; color: #1f326a; margin: 1rem 0; padding: .9rem 1rem; }
+    [data-gamelearn-research] strong { display: block; margin-bottom: .25rem; }
+    [data-gamelearn-tutor-question] { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); font-weight: 500; }
+    .viz-row { align-items: center; display: flex; flex-wrap: wrap; gap: .65rem; }
+    form[data-gamelearn-worksheet] { background: var(--card); border: 1px solid var(--border); border-radius: .8rem; display: grid; gap: .9rem; margin: 1rem 0; padding: 1rem; }
+    form[data-gamelearn-worksheet] fieldset { border: 0; display: grid; gap: .65rem; margin: 0; min-width: 0; padding: 0; }
+    form[data-gamelearn-worksheet] legend { font-weight: 600; margin-bottom: .65rem; padding: 0; }
+    form[data-gamelearn-worksheet] > label:first-child { display: block; font-weight: 600; }
+    form[data-gamelearn-worksheet] fieldset label { align-items: flex-start; display: flex; gap: .6rem; width: 100%; }
+    form[data-gamelearn-worksheet] input[type="radio"] { flex: 0 0 auto; margin-top: .25rem; }
+    form[data-gamelearn-worksheet] textarea { border: 1px solid var(--border); border-radius: .55rem; display: block; min-height: 8rem; padding: .7rem; resize: vertical; width: 100%; }
+    form[data-gamelearn-worksheet] button[type="submit"] { justify-self: start; }
+    form[data-gamelearn-worksheet] [data-gamelearn-hint-toggle] { justify-self: start; }
+    [data-gamelearn-hint] { background: #fff4df; border-left: .3rem solid var(--viz-series-3); border-radius: 0 .7rem .7rem 0; color: #5f4315; margin: 0; padding: .8rem 1rem; }
+    [data-gamelearn-form-feedback] { color: #1f326a; margin: 0; }
+    .gamelearn-diagram, .mermaid { margin: 1rem 0; max-width: 100%; overflow-x: auto; text-align: center; }
+    .gamelearn-diagram svg, svg[data-gamelearn-diagram], .mermaid svg { display: block; height: auto; margin-inline: auto; max-width: 100%; }
+    .mermaid[data-processed="true"] { background: transparent; }
+    [data-gamelearn-stepper] { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); min-width: 0; }
+    [data-gamelearn-stepper] > *, .gl-lesson-header { min-width: 0; }
+    .gl-lesson-header > :first-child, .gl-step > :first-child > :first-child { margin-top: 0; }
+    .gl-wizard-panel { background: var(--card); border: 1px solid var(--border); border-radius: 1rem; display: grid; grid-template-columns: minmax(0, 1fr); overflow: clip; }
+    .gl-step-navigation { background: var(--muted); border-bottom: 1px solid var(--border); padding: 1rem; }
+    .gl-step-navigation-title { font-size: .85rem; font-weight: 700; letter-spacing: .04em; margin: 0 0 .75rem; text-transform: uppercase; }
+    .gl-step-navigation ol { display: grid; gap: .45rem; grid-template-columns: repeat(5, minmax(0, 1fr)); list-style: none; margin: 0; padding: 0; }
+    .gl-step-navigation li { margin: 0; min-width: 0; }
+    .gl-step-navigation button { align-items: center; background: transparent; border: 1px solid transparent; border-radius: .7rem; color: var(--muted-foreground); cursor: pointer; display: grid; font: inherit; gap: .65rem; grid-template-columns: 2rem minmax(0, 1fr); padding: .65rem; text-align: left; width: 100%; }
+    .gl-step-navigation button:hover, .gl-step-navigation button:focus-visible { background: var(--card); border-color: var(--border); color: var(--foreground); outline: none; }
+    .gl-step-navigation li[aria-current="step"] button { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); font-weight: 650; }
+    .gl-step-number { align-items: center; background: var(--card); border: 1px solid var(--border); border-radius: 999px; color: var(--primary); display: inline-flex; font-size: .85rem; font-weight: 700; height: 2rem; justify-content: center; width: 2rem; }
+    .gl-step-navigation li[aria-current="step"] .gl-step-number { border-color: var(--primary-foreground); }
+    .gl-wizard-main { display: grid; gap: 1rem; min-width: 0; padding: clamp(1rem, 2.5vw, 1.5rem); }
+    .gl-step-stage { min-width: 0; }
+    .gl-step { display: grid; gap: 1rem; }
+    .gl-step[hidden] { display: none; }
+    .gl-step section > h3 { margin-bottom: .4rem; }
+    .gl-step section > p:first-of-type { margin-top: 0; }
+    .gl-file-paths, .gl-file-paths p, [data-gamelearn-file-row] { margin-block: .35rem; }
+    .gl-code-example { min-width: 0; }
+    .gl-step-controls { justify-content: space-between; }
+    @media (max-width: 760px) {
+      .gl-step-navigation ol { grid-auto-columns: minmax(13rem, 1fr); grid-auto-flow: column; grid-template-columns: none; overflow-x: auto; padding-bottom: .35rem; }
+    }
+  </style>
+</head>
+<body>
+  <script src="{{ url_for('static', filename='vendor/mermaid-11.12.1.min.js') }}"></script>
+  <script>
+    (() => {
+      const sendToGameLearn = (type, detail) => window.parent.postMessage({ type, ...detail }, "*");
+      const editorSuffixes = new Set([".asmdef", ".asmref", ".c", ".cginc", ".compute", ".cpp", ".cs", ".glsl", ".glslinc", ".h", ".hlsl", ".hpp", ".java", ".js", ".json", ".kt", ".log", ".md", ".py", ".shader", ".swift", ".ts", ".txt", ".uss", ".uxml", ".xml", ".yaml", ".yml"]);
+      const highlightCode = (code) => {
+        if (!code || code.dataset.gamelearnHighlighted === "true") return;
+        const source = code.textContent;
+        const highlightedLines = new Set(
+          (code.dataset.gamelearnHighlightLines || "")
+            .split(",")
+            .map((value) => Number.parseInt(value, 10))
+            .filter(Number.isFinite)
+        );
+        const tokenPattern = /(\/\*[\s\S]*?\*\/|\/\/[^\n]*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\b(?:class|struct|interface|enum|namespace|using|public|private|protected|internal|static|readonly|const|void|return|if|else|for|foreach|while|switch|case|break|continue|new|try|catch|finally|throw|true|false|null|async|await|var|this|base|override|virtual|sealed|ref|out|in)\b|\b(?:bool|byte|char|decimal|double|float|int|long|object|short|string|uint|ulong|ushort|GameObject|Transform|Vector2|Vector3|Quaternion|MonoBehaviour)\b|\b\d+(?:\.\d+)?[fFdDmM]?\b)/g;
+        const fragment = document.createDocumentFragment();
+        source.split("\n").forEach((line, lineIndex, lines) => {
+          const lineElement = document.createElement("span");
+          lineElement.className = "gl-code-line";
+          if (highlightedLines.has(lineIndex + 1)) {
+            lineElement.classList.add("gl-code-line-highlight");
+            lineElement.title = "This line supports the current explanation";
+          }
+          let cursor = 0;
+          for (const match of line.matchAll(tokenPattern)) {
+            lineElement.append(document.createTextNode(line.slice(cursor, match.index)));
+            const token = document.createElement("span");
+            const value = match[0];
+            if (value.startsWith("//") || value.startsWith("/*")) token.className = "syntax-comment";
+            else if (value.startsWith('"') || value.startsWith("'")) token.className = "syntax-string";
+            else if (/^\d/.test(value)) token.className = "syntax-number";
+            else if (/^(bool|byte|char|decimal|double|float|int|long|object|short|string|uint|ulong|ushort|GameObject|Transform|Vector2|Vector3|Quaternion|MonoBehaviour)$/.test(value)) token.className = "syntax-type";
+            else token.className = "syntax-keyword";
+            token.textContent = value;
+            lineElement.append(token);
+            cursor = match.index + value.length;
+          }
+          lineElement.append(document.createTextNode(line.slice(cursor) || " "));
+          fragment.append(lineElement);
+          if (lineIndex < lines.length - 1) fragment.append(document.createTextNode("\n"));
+        });
+        code.replaceChildren(fragment);
+        code.dataset.gamelearnHighlighted = "true";
+      };
+      window.openai = {
+        sendFollowUpMessage({ prompt } = {}) {
+          if (typeof prompt === "string" && prompt.trim()) {
+            sendToGameLearn("gamelearn:tutor-question", { question: prompt.trim() });
+          }
+          return Promise.resolve();
+        }
+      };
+      const normalizeFileControl = (control) => {
+        const path = control.dataset.gamelearnOpenFile;
+        if (!path) return;
+        const lowerPath = path.toLowerCase();
+        const dot = lowerPath.lastIndexOf(".");
+        const supported = dot >= 0 && editorSuffixes.has(lowerPath.slice(dot));
+        const replacement = document.createElement(supported ? "a" : "code");
+        replacement.textContent = path;
+        if (supported) {
+          replacement.href = "#";
+          replacement.dataset.gamelearnOpenFile = path;
+          replacement.setAttribute("aria-label", `Open ${path} in your configured editor`);
+        }
+        const row = control.closest(".gl-path-row, [data-gamelearn-file-row]");
+        if (row) row.replaceChildren(replacement);
+        else control.replaceWith(replacement);
+      };
+      const normalizeResearch = (element) => {
+        const text = element.textContent.trim().replace(/^Search for\s*:\s*/i, "");
+        element.dataset.gamelearnResearch = "";
+        element.replaceChildren();
+        const heading = document.createElement("strong");
+        heading.textContent = "Research this";
+        element.append(heading, document.createTextNode(text));
+      };
+      const normalizeLegacyWording = () => {
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        const textNodes = [];
+        while (walker.nextNode()) textNodes.push(walker.currentNode);
+        textNodes.forEach((node) => {
+          if (node.parentElement?.closest("script, style")) return;
+          node.textContent = node.textContent.replace(/\bfile button\b/gi, "file link");
+        });
+      };
+      const textWithoutControls = (element) => {
+        if (!element) return "";
+        const copy = element.cloneNode(true);
+        copy.querySelectorAll("input, textarea, select, button").forEach((control) => control.remove());
+        return copy.textContent.replace(/\s+/g, " ").trim();
+      };
+      const completeWorksheetQuestion = (form) => {
+        const visibleQuestion = textWithoutControls(form.querySelector("legend") || form.querySelector("label"));
+        return visibleQuestion || String(form.dataset.gamelearnQuestion || "").trim();
+      };
+      const completeWorksheetAnswer = (form) => {
+        const answers = [];
+        form.querySelectorAll("textarea[name='answer'], input[name='answer']:not([type='radio']):not([type='checkbox'])").forEach((control) => {
+          const value = String(control.value || "").trim();
+          if (value) answers.push(value);
+        });
+        form.querySelectorAll("input[name='answer']:checked").forEach((control) => {
+          const visibleAnswer = textWithoutControls(control.closest("label"));
+          const value = visibleAnswer || String(control.value || "").trim();
+          if (value) answers.push(value);
+        });
+        form.querySelectorAll("select[name='answer']").forEach((control) => {
+          Array.from(control.selectedOptions).forEach((option) => {
+            const value = option.textContent.trim();
+            if (value) answers.push(value);
+          });
+        });
+        return answers.join("\n");
+      };
+      let mermaidRendering = false;
+      const renderVisibleMermaid = async () => {
+        if (!window.mermaid || mermaidRendering) return;
+        const diagrams = Array.from(document.querySelectorAll(".mermaid:not([data-processed])"))
+          .filter((diagram) => diagram.getClientRects().length > 0);
+        if (!diagrams.length) return;
+        mermaidRendering = true;
+        try {
+          await window.mermaid.run({ nodes: diagrams, suppressErrors: false });
+        } finally {
+          mermaidRendering = false;
+        }
+      };
+      const submitWorksheet = (form) => {
+        if (!form || form.dataset.gamelearnSubmitting === "true") return;
+        const worksheetQuestion = completeWorksheetQuestion(form);
+        const studentAnswer = completeWorksheetAnswer(form);
+        let feedback = form.querySelector("[data-gamelearn-form-feedback]");
+        if (!feedback) {
+          feedback = document.createElement("p");
+          feedback.dataset.gamelearnFormFeedback = "";
+          feedback.setAttribute("role", "status");
+          form.append(feedback);
+        }
+        if (!studentAnswer) {
+          feedback.setAttribute("role", "alert");
+          feedback.textContent = "Choose or enter an answer first.";
+          return;
+        }
+        if (!worksheetQuestion) {
+          feedback.setAttribute("role", "alert");
+          feedback.textContent = "This worksheet question could not be read. Please regenerate the learning page.";
+          return;
+        }
+        form.dataset.gamelearnSubmitting = "true";
+        const submitButton = form.querySelector("button");
+        if (submitButton) submitButton.disabled = true;
+        feedback.setAttribute("role", "status");
+        feedback.textContent = "Opening a new tutor chat to check your answer…";
+        const submissionId = `worksheet-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        form.dataset.gamelearnSubmissionId = submissionId;
+        sendToGameLearn("gamelearn:worksheet-submission", {
+          submissionId,
+          worksheetQuestion,
+          studentAnswer,
+        });
+      };
+      const toggleWorksheetHint = (button) => {
+        const form = button.closest("form[data-gamelearn-worksheet]");
+        const hint = form?.querySelector("[data-gamelearn-hint]");
+        if (!hint) return;
+        const show = hint.hidden;
+        hint.hidden = !show;
+        button.setAttribute("aria-expanded", String(show));
+        button.textContent = show ? "Hide hint" : "Show hint";
+      };
+      const initializeStepper = (root) => {
+        const steps = Array.from(root.querySelectorAll("[data-gamelearn-step]"));
+        const listItems = Array.from(root.querySelectorAll("[data-gamelearn-step-list] > li"));
+        const stepButtons = listItems.map((item, index) => {
+          const existing = item.querySelector("[data-gamelearn-step-jump]");
+          if (existing) return existing;
+          const title = item.textContent.trim();
+          const button = document.createElement("button");
+          button.type = "button";
+          button.dataset.gamelearnStepJump = String(index);
+          button.setAttribute("aria-controls", steps[index]?.id || `gamelearn-step-${index}`);
+          const number = document.createElement("span");
+          number.className = "gl-step-number";
+          number.setAttribute("aria-hidden", "true");
+          number.textContent = String(index + 1);
+          const label = document.createElement("span");
+          label.textContent = title;
+          button.append(number, label);
+          item.replaceChildren(button);
+          return button;
+        });
+        const previous = root.querySelector("[data-gamelearn-previous]");
+        const next = root.querySelector("[data-gamelearn-next]");
+        const position = root.querySelector("[data-gamelearn-position]");
+        if (!steps.length || steps.length !== listItems.length || !previous || !next || !position) return;
+        let current = 0;
+        const showStep = (index) => {
+          current = Math.max(0, Math.min(index, steps.length - 1));
+          steps.forEach((step, stepIndex) => { step.hidden = stepIndex !== current; });
+          listItems.forEach((item, itemIndex) => {
+            if (itemIndex === current) item.setAttribute("aria-current", "step");
+            else item.removeAttribute("aria-current");
+          });
+          stepButtons.forEach((button, buttonIndex) => {
+            button.setAttribute("aria-expanded", String(buttonIndex === current));
+          });
+          previous.disabled = current === 0;
+          next.disabled = current === steps.length - 1;
+          position.textContent = `Step ${current + 1} of ${steps.length}`;
+          window.requestAnimationFrame(renderVisibleMermaid);
+        };
+        stepButtons.forEach((button) => {
+          button.addEventListener("click", () => showStep(Number(button.dataset.gamelearnStepJump)));
+        });
+        previous.addEventListener("click", () => showStep(current - 1));
+        next.addEventListener("click", () => showStep(current + 1));
+        showStep(0);
+      };
+      window.addEventListener("message", (event) => {
+        if (event.source !== window.parent || !event.data || typeof event.data !== "object") return;
+        if (!["gamelearn:tutor-chat-opened", "gamelearn:tutor-chat-failed"].includes(event.data.type)) return;
+        const form = Array.from(document.querySelectorAll("form[data-gamelearn-worksheet]")).find(
+          (item) => item.dataset.gamelearnSubmissionId === event.data.submissionId
+        );
+        if (!form) return;
+        const submitButton = form.querySelector("button");
+        if (submitButton) submitButton.disabled = false;
+        delete form.dataset.gamelearnSubmitting;
+        delete form.dataset.gamelearnSubmissionId;
+        const feedback = form.querySelector("[data-gamelearn-form-feedback]");
+        if (!feedback) return;
+        if (event.data.type === "gamelearn:tutor-chat-opened") feedback.remove();
+        else {
+          feedback.setAttribute("role", "alert");
+          feedback.textContent = event.data.error || "GameLearn could not open the tutor chat.";
+        }
+      });
+      document.addEventListener("click", (event) => {
+        if (!(event.target instanceof Element)) return;
+        const tutorButton = event.target.closest("[data-gamelearn-tutor-question]");
+        if (tutorButton) {
+          const question = tutorButton.dataset.gamelearnTutorQuestion;
+          if (question) sendToGameLearn("gamelearn:tutor-question", { question });
+          return;
+        }
+        const fileButton = event.target.closest("[data-gamelearn-open-file]");
+        if (fileButton) {
+          event.preventDefault();
+          const path = fileButton.dataset.gamelearnOpenFile;
+          if (path) sendToGameLearn("gamelearn:open-file", { path });
+          return;
+        }
+        const hintButton = event.target.closest("[data-gamelearn-hint-toggle]");
+        if (hintButton) {
+          event.preventDefault();
+          toggleWorksheetHint(hintButton);
+          return;
+        }
+        const worksheetButton = event.target.closest("form[data-gamelearn-worksheet] button[type='submit']");
+        if (worksheetButton) {
+          event.preventDefault();
+          submitWorksheet(worksheetButton.closest("form"));
+        }
+      });
+      document.addEventListener("submit", (event) => {
+        const form = event.target.closest("form[data-gamelearn-worksheet]");
+        if (!form) return;
+        event.preventDefault();
+        submitWorksheet(form);
+      });
+      document.addEventListener("DOMContentLoaded", () => {
+        if (window.mermaid) {
+          window.mermaid.initialize({
+            startOnLoad: false,
+            securityLevel: "strict",
+            theme: "base",
+            flowchart: { htmlLabels: false, useMaxWidth: true },
+            sequence: { useMaxWidth: true, wrap: true },
+            themeVariables: {
+              background: "#f7f8fc",
+              primaryColor: "#e8efff",
+              primaryTextColor: "#172033",
+              primaryBorderColor: "#3157d5",
+              lineColor: "#526075",
+              secondaryColor: "#f1ebfb",
+              tertiaryColor: "#fff4df",
+              fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
+            }
+          });
+          const mermaidVisibilityObserver = new MutationObserver(() => {
+            window.requestAnimationFrame(renderVisibleMermaid);
+          });
+          mermaidVisibilityObserver.observe(document.body, {
+            attributes: true,
+            attributeFilter: ["hidden", "class", "style"],
+            subtree: true
+          });
+          renderVisibleMermaid();
+        }
+        document.querySelectorAll("pre code").forEach(highlightCode);
+        const controls = Array.from(document.querySelectorAll("[data-gamelearn-open-file]"));
+        const normalizedRows = new Set();
+        controls.forEach((control) => {
+          const row = control.closest(".gl-path-row, [data-gamelearn-file-row]");
+          if (row && normalizedRows.has(row)) return;
+          normalizeFileControl(control);
+          if (row) normalizedRows.add(row);
+        });
+        document.querySelectorAll("[data-gamelearn-research], .gl-research").forEach(normalizeResearch);
+        document.querySelectorAll("[data-gamelearn-stepper]").forEach(initializeStepper);
+        normalizeLegacyWording();
+      });
+    })();
+  </script>
+  {{ learning_page }}
+</body>
+</html>

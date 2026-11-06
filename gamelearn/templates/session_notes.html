@@ -1,0 +1,31 @@
+<form id="session-notes-form" data-url="{{ url_for('main.save_session_notes', session_id=session.id) }}" data-token="{{ config.CODEX_BRIDGE_CSRF_TOKEN }}">
+  <div id="note-youtube-controls" class="mb-3" hidden>
+    <label for="note-youtube-url" class="form-label">YouTube video link or embed code</label>
+    <div class="d-flex gap-2 flex-wrap">
+      <textarea id="note-youtube-url" class="form-control" rows="2" placeholder="Paste a YouTube link or iframe embed code" aria-describedby="note-youtube-error"></textarea>
+      <button id="add-note-youtube" class="btn btn-primary" type="button">Add video</button>
+      <button id="cancel-note-youtube" class="btn btn-outline-secondary" type="button">Cancel</button>
+    </div>
+    <p id="note-youtube-error" class="text-danger mb-0" role="status"></p>
+  </div>
+  <div id="session-notes-editor"></div>
+  <div class="note-image-controls d-none" id="note-image-controls" aria-label="Selected picture controls">
+    <div class="note-image-size">
+      <label for="note-image-size" class="form-label mb-0">Picture size</label>
+      <input class="form-range" id="note-image-size" type="range" min="25" max="100" step="5" value="100">
+      <output id="note-image-size-value" for="note-image-size">100%</output>
+    </div>
+    <div class="btn-group btn-group-sm" role="group" aria-label="Picture alignment">
+      <button class="btn btn-outline-secondary" type="button" data-image-align="left">Left</button>
+      <button class="btn btn-outline-secondary" type="button" data-image-align="center">Center</button>
+      <button class="btn btn-outline-secondary" type="button" data-image-align="right">Right</button>
+    </div>
+    <button class="btn btn-sm btn-outline-danger" id="remove-note-image" type="button">Remove picture</button>
+  </div>
+  <script type="application/json" id="session-notes-data">{{ session.notes_delta | tojson }}</script>
+  <div class="d-flex align-items-center gap-3 mt-3">
+    <button class="btn btn-primary" type="submit" disabled>Save notes</button>
+    <p class="form-text mb-0" id="session-notes-status" role="status">Loading notes editor…</p>
+  </div>
+  <noscript>Enable JavaScript to edit your notes.</noscript>
+</form>
